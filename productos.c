@@ -5,7 +5,7 @@
 /* ================= RECURSOS ================= */
 
 void ingresarRecursos(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int *numRecursos) {
-    printf("\n¿Cuántos recursos desea ingresar?: ");
+    printf("\n¿Cuántos recursos desea ingresar?:");
     if (scanf("%d", numRecursos) != 1) {
         *numRecursos = 0;
         return;
