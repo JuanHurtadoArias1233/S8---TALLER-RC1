@@ -2,112 +2,104 @@
 #include <string.h>
 #include "productos.h"
 
-/* --- Recursos --- */
-void ingresarRecursos(char recursos[][MAX_NOMBRE], int disponibles[], int *numRecursos) {
-    int k;
-    printf("\n¿Cuántos tipos de recursos desea registrar (max %d)? ", MAX_RECURSOS);
-    if (scanf("%d", &k) != 1) return;
-    if (k < 0) k = 0;
-    if (k > MAX_RECURSOS) k = MAX_RECURSOS;
-    *numRecursos = k;
+/* ================= RECURSOS ================= */
 
+void ingresarRecursos(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int *numRecursos) {
+    printf("\n¿Cuántos recursos desea ingresar?: ");
+    if (scanf("%d", numRecursos) != 1) {
+        *numRecursos = 0;
+        return;
+    }
+
+    if (*numRecursos > MAX_RECURSOS) *numRecursos = MAX_RECURSOS;
     for (int i = 0; i < *numRecursos; i++) {
-        printf("Nombre recurso %d: ", i + 1);
-        scanf("%49s", recursos[i]);
-        printf("Cantidad disponible de %s: ", recursos[i]);
-        scanf("%d", &disponibles[i]);
-        if (disponibles[i] < 0) disponibles[i] = 0;
+        printf("Nombre del recurso %d: ", i + 1);
+        scanf("%s", recursos[i]);
+        printf("Cantidad disponible: ");
+        scanf("%d", &recursosDisponibles[i]);
     }
 }
 
-void editarRecurso(char recursos[][MAX_NOMBRE], int disponibles[], int numRecursos) {
-    char nombre[MAX_NOMBRE];
-    if (numRecursos <= 0) {
-        printf("No hay recursos registrados.\n");
-        return;
-    }
-
-    printf("\nIngrese el nombre del recurso a editar: ");
-    scanf("%49s", nombre);
-
+void mostrarRecursos(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int numRecursos) {
+    printf("\n--- LISTA DE RECURSOS ---\n");
     for (int i = 0; i < numRecursos; i++) {
-        if (strcmp(nombre, recursos[i]) == 0) {
-            printf("Nuevo nombre para %s: ", recursos[i]);
-            scanf("%49s", recursos[i]);
-            printf("Nueva cantidad disponible: ");
-            scanf("%d", &disponibles[i]);
-            if (disponibles[i] < 0) disponibles[i] = 0;
-            printf("Recurso actualizado.\n");
-            return;
-        }
+        printf("%d. %s - %d unidades\n", i + 1, recursos[i], recursosDisponibles[i]);
     }
-    printf("Recurso no encontrado.\n");
 }
 
-void mostrarRecursos(char recursos[][MAX_NOMBRE], int disponibles[], int numRecursos) {
+void editarRecurso(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int numRecursos) {
     if (numRecursos <= 0) {
-        printf("No hay recursos registrados.\n");
+        printf("No hay recursos para editar.\n");
         return;
     }
-    printf("\n--- Recursos ---\n");
-    for (int r = 0; r < numRecursos; r++) {
-        printf("%d) %s : %d\n", r + 1, recursos[r], disponibles[r]);
+
+    mostrarRecursos(recursos, recursosDisponibles, numRecursos);
+    int id;
+    printf("\nIngrese número de recurso a editar: ");
+    if (scanf("%d", &id) != 1) return;
+    id--;
+
+    if (id < 0 || id >= numRecursos) {
+        printf("ID inválido.\n");
+        return;
     }
+
+    printf("Nuevo nombre: ");
+    scanf("%s", recursos[id]);
+    printf("Nueva cantidad: ");
+    scanf("%d", &recursosDisponibles[id]);
 }
 
-/* --- Productos --- */
+/* ================= PRODUCTOS ================= */
+
 void ingresarProductos(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
                        int usoRecursos[][MAX_RECURSOS], int *numProductos, int numRecursos) {
-
-    int k;
-    printf("\n¿Cuántos productos desea ingresar (max %d)? ", MAX_PRODUCTOS - *numProductos);
-    if (scanf("%d", &k) != 1) return;
-    if (k < 0) k = 0;
-    if (k > (MAX_PRODUCTOS - *numProductos)) k = MAX_PRODUCTOS - *numProductos;
-
-    for (int i = *numProductos; i < *numProductos + k; i++) {
-        printf("\n--- Producto %d ---\n", i + 1);
-        printf("Nombre: ");
-        scanf("%49s", productos[i]);
-
-        printf("Cantidad demandada: ");
-        scanf("%d", &cantidades[i]);
-        if (cantidades[i] < 0) cantidades[i] = 0;
-
-        printf("Tiempo de fabricacion por unidad (horas, ej: 2.5): ");
-        scanf("%f", &tiempos[i]);
-        if (tiempos[i] < 0.0f) tiempos[i] = 0.0f;
-
-        if (numRecursos > 0)
-            printf("Ingrese recursos requeridos por unidad:\n");
-        for (int r = 0; r < numRecursos; r++) {
-            printf("  %s por unidad: ", (r>=0? "recurso":"recurso"));
-            scanf("%d", &usoRecursos[i][r]);
-            if (usoRecursos[i][r] < 0) usoRecursos[i][r] = 0;
-        }
-        /* Si hay más recursos que se han registrado anteriormente, inicializamos las columnas que no se usan */
-        for (int r = numRecursos; r < MAX_RECURSOS; r++) usoRecursos[i][r] = 0;
+    printf("\n¿Cuántos productos desea ingresar?: ");
+    if (scanf("%d", numProductos) != 1) {
+        *numProductos = 0;
+        return;
     }
-    *numProductos += k;
+
+    if (*numProductos > MAX_PRODUCTOS) *numProductos = MAX_PRODUCTOS;
+    for (int i = 0; i < *numProductos; i++) {
+        printf("\nNombre del producto %d: ", i + 1);
+        scanf("%s", productos[i]);
+
+        printf("Cantidad a producir: ");
+        scanf("%d", &cantidades[i]);
+
+        printf("Tiempo por unidad: ");
+        scanf("%f", &tiempos[i]);
+
+        if (numRecursos > 0) {
+            printf("Uso de recursos para '%s':\n", productos[i]);
+            for (int r = 0; r < numRecursos; r++) {
+                printf("  Recurso %d: ", r + 1);
+                scanf("%d", &usoRecursos[i][r]);
+            }
+        } else {
+            for (int r = 0; r < MAX_RECURSOS; r++) usoRecursos[i][r] = 0;
+        }
+    }
 }
 
 void mostrarProductos(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                      int usoRecursos[][MAX_RECURSOS], char recursos[][MAX_NOMBRE], int numProductos, int numRecursos) {
-
+                      int usoRecursos[][MAX_RECURSOS], int numProductos, int numRecursos) {
+    printf("\n--- LISTA DE PRODUCTOS ---\n");
     if (numProductos <= 0) {
-        printf("\nNo hay productos registrados.\n");
+        printf("No hay productos.\n");
         return;
     }
 
-    printf("\n--- Productos ---\n");
     for (int i = 0; i < numProductos; i++) {
-        printf("\n%d) %s\n", i + 1, productos[i]);
-        printf("   Cantidad demandada: %d\n", cantidades[i]);
-        printf("   Tiempo por unidad: %.2f horas\n", tiempos[i]);
+        printf("\nProducto %d: %s\n", i + 1, productos[i]);
+        printf("Cantidad: %d\n", cantidades[i]);
+        printf("Tiempo por unidad: %.2f\n", tiempos[i]);
+
         if (numRecursos > 0) {
-            printf("   Recursos por unidad:\n");
+            printf("Uso de recursos:\n");
             for (int r = 0; r < numRecursos; r++) {
-                printf("     - %s: %d\n", recursos[r], usoRecursos[i][r]);
+                printf("  Recurso %d: %d\n", r + 1, usoRecursos[i][r]);
             }
         }
     }
@@ -115,104 +107,100 @@ void mostrarProductos(char productos[][MAX_NOMBRE], int cantidades[], float tiem
 
 void editarProducto(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
                     int usoRecursos[][MAX_RECURSOS], int numProductos, int numRecursos) {
-
-    char nombre[MAX_NOMBRE];
     if (numProductos <= 0) {
         printf("No hay productos para editar.\n");
         return;
     }
 
-    printf("\nIngrese el nombre del producto a editar: ");
-    scanf("%49s", nombre);
+    mostrarProductos(productos, cantidades, tiempos, usoRecursos, numProductos, numRecursos);
+    int id;
+    printf("\nIngrese número de producto a editar: ");
+    if (scanf("%d", &id) != 1) return;
+    id--;
 
-    for (int i = 0; i < numProductos; i++) {
-        if (strcmp(nombre, productos[i]) == 0) {
-            printf("Nuevo nombre (actual: %s): ", productos[i]);
-            scanf("%49s", productos[i]);
-
-            printf("Nueva cantidad demandada: ");
-            scanf("%d", &cantidades[i]);
-            if (cantidades[i] < 0) cantidades[i] = 0;
-
-            printf("Nuevo tiempo por unidad: ");
-            scanf("%f", &tiempos[i]);
-            if (tiempos[i] < 0.0f) tiempos[i] = 0.0f;
-
-            for (int r = 0; r < numRecursos; r++) {
-                printf("Nuevo %s por unidad: ", productos[i]);
-                scanf("%d", &usoRecursos[i][r]);
-                if (usoRecursos[i][r] < 0) usoRecursos[i][r] = 0;
-            }
-            printf("Producto actualizado.\n");
-            return;
-        }
+    if (id < 0 || id >= numProductos) {
+        printf("ID inválido.\n");
+        return;
     }
-    printf("Producto no encontrado.\n");
+
+    printf("Nuevo nombre: ");
+    scanf("%s", productos[id]);
+
+    printf("Nueva cantidad: ");
+    scanf("%d", &cantidades[id]);
+
+    printf("Nuevo tiempo por unidad: ");
+    scanf("%f", &tiempos[id]);
+
+    for (int r = 0; r < numRecursos; r++) {
+        printf("Nuevo uso del recurso %d: ", r + 1);
+        scanf("%d", &usoRecursos[id][r]);
+    }
 }
 
 void eliminarProducto(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
                       int usoRecursos[][MAX_RECURSOS], int *numProductos, int numRecursos) {
-
-    char nombre[MAX_NOMBRE];
     if (*numProductos <= 0) {
         printf("No hay productos para eliminar.\n");
         return;
     }
 
-    printf("\nIngrese el nombre del producto a eliminar: ");
-    scanf("%49s", nombre);
+    mostrarProductos(productos, cantidades, tiempos, usoRecursos, *numProductos, numRecursos);
+    int id;
+    printf("\nIngrese número de producto a eliminar: ");
+    if (scanf("%d", &id) != 1) return;
+    id--;
 
-    for (int i = 0; i < *numProductos; i++) {
-        if (strcmp(nombre, productos[i]) == 0) {
-            /* desplazar todo hacia arriba */
-            for (int j = i; j < *numProductos - 1; j++) {
-                strcpy(productos[j], productos[j + 1]);
-                cantidades[j] = cantidades[j + 1];
-                tiempos[j] = tiempos[j + 1];
-                for (int r = 0; r < numRecursos; r++)
-                    usoRecursos[j][r] = usoRecursos[j + 1][r];
-            }
-            (*numProductos)--;
-            printf("Producto eliminado.\n");
-            return;
-        }
+    if (id < 0 || id >= *numProductos) {
+        printf("ID inválido.\n");
+        return;
     }
-    printf("Producto no encontrado.\n");
+
+    for (int i = id; i < *numProductos - 1; i++) {
+        strcpy(productos[i], productos[i+1]);
+        cantidades[i] = cantidades[i+1];
+        tiempos[i] = tiempos[i+1];
+        for (int r = 0; r < numRecursos; r++)
+            usoRecursos[i][r] = usoRecursos[i+1][r];
+    }
+    (*numProductos)--;
 }
 
-int buscarProducto(char productos[][MAX_NOMBRE], int numProductos, const char *nombre) {
-    for (int i = 0; i < numProductos; i++) {
-        if (strcmp(productos[i], nombre) == 0) return i;
-    }
-    return -1;
-}
+/* ================= UTILIDADES ================= */
 
-/* --- Cálculos --- */
 float calcularTiempoTotal(int cantidades[], float tiempos[], int numProductos) {
     float total = 0.0f;
-    for (int i = 0; i < numProductos; i++) {
+    for (int i = 0; i < numProductos; i++)
         total += cantidades[i] * tiempos[i];
-    }
     return total;
 }
 
 void calcularRecursosTotales(int cantidades[], int usoRecursos[][MAX_RECURSOS],
-                             int numProductos, int numRecursos, int resultado[]) {
-    for (int r = 0; r < numRecursos; r++) resultado[r] = 0;
-    for (int i = 0; i < numProductos; i++) {
-        for (int r = 0; r < numRecursos; r++) {
-            resultado[r] += cantidades[i] * usoRecursos[i][r];
+                             int numProductos, int numRecursos, int recursosTotales[]) {
+    for (int r = 0; r < numRecursos; r++) {
+        recursosTotales[r] = 0;
+        for (int p = 0; p < numProductos; p++) {
+            recursosTotales[r] += cantidades[p] * usoRecursos[p][r];
         }
     }
 }
 
+/*
+ verificarFactibilidad:
+ - retorna 1 si es factible (tiempo suficiente Y recursos suficientes)
+ - retorna 0 si NO es factible
+*/
 int verificarFactibilidad(float tiempoTotal, float tiempoDisponible,
-                          int recursosTotales[], int recursosDisponibles[], int numRecursos) {
+                          int recursosTotales[], int recursosDisponibles[],
+                          int numRecursos) {
 
-    if (tiempoTotal > tiempoDisponible) return 0;
+    if (tiempoTotal > tiempoDisponible)
+        return 0;
 
     for (int r = 0; r < numRecursos; r++) {
-        if (recursosTotales[r] > recursosDisponibles[r]) return 0;
+        if (recursosTotales[r] > recursosDisponibles[r])
+            return 0;
     }
+
     return 1;
 }
