@@ -1,45 +1,37 @@
 #ifndef PRODUCTOS_H
 #define PRODUCTOS_H
 
-#define MAX_RECURSOS 10
-#define MAX_PRODUCTOS 10
+#define MAX_PRODUCTOS 50
+#define MAX_RECURSOS 20
 #define MAX_NOMBRE 50
 
-/* PROTOTIPOS */
 
-// Recursos
-void ingresarRecursos(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int *numRecursos);
-void mostrarRecursos(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int numRecursos);
-void editarRecurso(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int numRecursos);
+extern char nombresRecursos[MAX_RECURSOS][MAX_NOMBRE];
+extern int cantidadTotalRecursos[MAX_RECURSOS];
+extern int numRecursos;
 
-// Productos
-void ingresarProductos(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                       int usoRecursos[][MAX_RECURSOS], int *numProductos, int numRecursos);
+extern char nombresProductos[MAX_PRODUCTOS][MAX_NOMBRE];
+extern float tiempoFabricacion[MAX_PRODUCTOS];
+extern int recursosNecesarios[MAX_PRODUCTOS][MAX_RECURSOS];
+extern int numProductos;
 
-void mostrarProductos(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                      int usoRecursos[][MAX_RECURSOS], int numProductos, int numRecursos);
+extern float tiempoFabrica;
 
-void editarProducto(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                    int usoRecursos[][MAX_RECURSOS], int numProductos, int numRecursos);
 
-void eliminarProducto(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                      int usoRecursos[][MAX_RECURSOS], int *numProductos, int numRecursos);
+void limpiarBuffer();
+int leerEnteroNoNegativo();
+float leerFlotanteNoNegativo();
+void leerCadena(char *texto, int max);
 
-// Utilidades
-float calcularTiempoTotal(int cantidades[], float tiempos[], int numProductos);
-void calcularRecursosTotales(int cantidades[], int usoRecursos[][MAX_RECURSOS],
-                             int numProductos, int numRecursos, int recursosTotales[]);
+void menu();
 
-/*
- Verificar factibilidad ahora acepta:
-  - tiempoTotal requerido (float)
-  - tiempoDisponible (float)
-  - recursosTotales[] calculados (int[])
-  - recursosDisponibles[] (int[])
-  - numRecursos (int)
-*/
-int verificarFactibilidad(float tiempoTotal, float tiempoDisponible,
-                          int recursosTotales[], int recursosDisponibles[],
-                          int numRecursos);
+void ingresarRecursos();
+
+void ingresarProductos();
+void mostrarProductos();
+void editarProducto();
+void eliminarProducto();
+
+void solicitudCliente();
 
 #endif

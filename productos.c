@@ -2,205 +2,264 @@
 #include <string.h>
 #include "productos.h"
 
-/* ================= RECURSOS ================= */
 
-void ingresarRecursos(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int *numRecursos) {
-    printf("\n¿Cuántos recursos desea ingresar?:");
-    if (scanf("%d", numRecursos) != 1) {
-        *numRecursos = 0;
-        return;
-    }
 
-    if (*numRecursos > MAX_RECURSOS) *numRecursos = MAX_RECURSOS;
-    for (int i = 0; i < *numRecursos; i++) {
-        printf("Nombre del recurso %d: ", i + 1);
-        scanf("%s", recursos[i]);
-        printf("Cantidad disponible: ");
-        scanf("%d", &recursosDisponibles[i]);
-    }
+char nombresRecursos[MAX_RECURSOS][MAX_NOMBRE];
+int cantidadTotalRecursos[MAX_RECURSOS];
+int numRecursos = 0;
+
+char nombresProductos[MAX_PRODUCTOS][MAX_NOMBRE];
+float tiempoFabricacion[MAX_PRODUCTOS];
+int recursosNecesarios[MAX_PRODUCTOS][MAX_RECURSOS];
+int numProductos = 0;
+
+float tiempoFabrica = 0;
+
+
+
+void limpiarBuffer() {
+    while (getchar() != '\n');
 }
 
-void mostrarRecursos(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int numRecursos) {
-    printf("\n--- LISTA DE RECURSOS ---\n");
+int leerEnteroNoNegativo() {
+    int x;
+    while (scanf("%d", &x) != 1 || x < 0) {
+        printf("Valor invalido. Intente otra vez: ");
+        limpiarBuffer();
+    }
+    limpiarBuffer();
+    return x;
+}
+
+float leerFlotanteNoNegativo() {
+    float x;
+    while (scanf("%f", &x) != 1 || x < 0) {
+        printf("Valor invalido. Intente otra vez: ");
+        limpiarBuffer();
+    }
+    limpiarBuffer();
+    return x;
+}
+
+void leerCadena(char *texto, int max) {
+    fgets(texto, max, stdin);
+    texto[strcspn(texto, "\n")] = 0;
+}
+
+
+
+void menu() {
+    printf("\n--- MENU PRINCIPAL ---\n");
+    printf("1. Ingresar productos\n");
+    printf("2. Mostrar productos\n");
+    printf("3. Editar producto\n");
+    printf("4. Eliminar producto\n");
+    printf("5. Solicitud del cliente\n");
+    printf("0. Salir\n");
+    printf("Opcion: ");
+}
+
+
+
+void ingresarRecursos() {
+    printf("\nCantidad de recursos: ");
+    numRecursos = leerEnteroNoNegativo();
+
     for (int i = 0; i < numRecursos; i++) {
-        printf("%d. %s - %d unidades\n", i + 1, recursos[i], recursosDisponibles[i]);
+        printf("Nombre recurso %d: ", i + 1);
+        leerCadena(nombresRecursos[i], MAX_NOMBRE);
+
+        printf("Cantidad disponible: ");
+        cantidadTotalRecursos[i] = leerEnteroNoNegativo();
     }
+
+    printf("Tiempo disponible de la fabrica: ");
+    tiempoFabrica = leerFlotanteNoNegativo();
 }
 
-void editarRecurso(char recursos[][MAX_NOMBRE], int recursosDisponibles[], int numRecursos) {
-    if (numRecursos <= 0) {
-        printf("No hay recursos para editar.\n");
-        return;
-    }
 
-    mostrarRecursos(recursos, recursosDisponibles, numRecursos);
-    int id;
-    printf("\nIngrese número de recurso a editar: ");
-    if (scanf("%d", &id) != 1) return;
-    id--;
 
-    if (id < 0 || id >= numRecursos) {
-        printf("ID inválido.\n");
-        return;
-    }
+void ingresarProductos() {
+    printf("\nCantidad de productos a ingresar: ");
+    int nuevos = leerEnteroNoNegativo();
 
-    printf("Nuevo nombre: ");
-    scanf("%s", recursos[id]);
-    printf("Nueva cantidad: ");
-    scanf("%d", &recursosDisponibles[id]);
-}
+    for (int i = numProductos; i < numProductos + nuevos; i++) {
 
-/* ================= PRODUCTOS ================= */
-
-void ingresarProductos(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                       int usoRecursos[][MAX_RECURSOS], int *numProductos, int numRecursos) {
-    printf("\n¿Cuántos productos desea ingresar?: ");
-    if (scanf("%d", numProductos) != 1) {
-        *numProductos = 0;
-        return;
-    }
-
-    if (*numProductos > MAX_PRODUCTOS) *numProductos = MAX_PRODUCTOS;
-    for (int i = 0; i < *numProductos; i++) {
-        printf("\nNombre del producto %d: ", i + 1);
-        scanf("%s", productos[i]);
-
-        printf("Cantidad a producir: ");
-        scanf("%d", &cantidades[i]);
+        printf("Nombre del producto %d: ", i + 1);
+        leerCadena(nombresProductos[i], MAX_NOMBRE);
 
         printf("Tiempo por unidad: ");
-        scanf("%f", &tiempos[i]);
+        tiempoFabricacion[i] = leerFlotanteNoNegativo();
 
-        if (numRecursos > 0) {
-            printf("Uso de recursos para '%s':\n", productos[i]);
-            for (int r = 0; r < numRecursos; r++) {
-                printf("  Recurso %d: ", r + 1);
-                scanf("%d", &usoRecursos[i][r]);
-            }
-        } else {
-            for (int r = 0; r < MAX_RECURSOS; r++) usoRecursos[i][r] = 0;
+        for (int r = 0; r < numRecursos; r++) {
+            printf("Uso de %s por unidad: ", nombresRecursos[r]);
+            recursosNecesarios[i][r] = leerEnteroNoNegativo();
         }
     }
+
+    numProductos += nuevos;
 }
 
-void mostrarProductos(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                      int usoRecursos[][MAX_RECURSOS], int numProductos, int numRecursos) {
-    printf("\n--- LISTA DE PRODUCTOS ---\n");
-    if (numProductos <= 0) {
-        printf("No hay productos.\n");
-        return;
-    }
+void mostrarProductos() {
+    printf("\n=== PRODUCTOS ===\n");
 
     for (int i = 0; i < numProductos; i++) {
-        printf("\nProducto %d: %s\n", i + 1, productos[i]);
-        printf("Cantidad: %d\n", cantidades[i]);
-        printf("Tiempo por unidad: %.2f\n", tiempos[i]);
+        printf("\nProducto: %s\n", nombresProductos[i]);
+        printf("Tiempo por unidad: %.2f\n", tiempoFabricacion[i]);
 
-        if (numRecursos > 0) {
-            printf("Uso de recursos:\n");
+        for (int r = 0; r < numRecursos; r++) {
+            printf("   %s: %d\n", nombresRecursos[r], recursosNecesarios[i][r]);
+        }
+    }
+}
+
+void editarProducto() {
+    char buscar[MAX_NOMBRE];
+    printf("Nombre del producto: ");
+    leerCadena(buscar, MAX_NOMBRE);
+
+    for (int i = 0; i < numProductos; i++) {
+        if (strcmp(buscar, nombresProductos[i]) == 0) {
+
+            printf("Nuevo nombre: ");
+            leerCadena(nombresProductos[i], MAX_NOMBRE);
+
+            printf("Nuevo tiempo por unidad: ");
+            tiempoFabricacion[i] = leerFlotanteNoNegativo();
+
             for (int r = 0; r < numRecursos; r++) {
-                printf("  Recurso %d: %d\n", r + 1, usoRecursos[i][r]);
+                printf("Nuevo uso de %s por unidad: ", nombresRecursos[r]);
+                recursosNecesarios[i][r] = leerEnteroNoNegativo();
+            }
+            return;
+        }
+    }
+    printf("Producto no encontrado.\n");
+}
+
+void eliminarProducto() {
+    char buscar[MAX_NOMBRE];
+    printf("Producto a eliminar: ");
+    leerCadena(buscar, MAX_NOMBRE);
+
+    for (int i = 0; i < numProductos; i++) {
+        if (strcmp(buscar, nombresProductos[i]) == 0) {
+
+            for (int j = i; j < numProductos - 1; j++) {
+                strcpy(nombresProductos[j], nombresProductos[j + 1]);
+                tiempoFabricacion[j] = tiempoFabricacion[j + 1];
+
+                for (int r = 0; r < numRecursos; r++)
+                    recursosNecesarios[j][r] = recursosNecesarios[j + 1][r];
+            }
+
+            numProductos--;
+            printf("Producto eliminado.\n");
+            return;
+        }
+    }
+    printf("Producto no encontrado.\n");
+}
+
+
+
+void solicitudCliente() {
+    if (numProductos == 0) {
+        printf("\nNo hay productos registrados. Ingrese productos primero.\n");
+        return;
+    }
+
+    int pedidoCantidades[MAX_PRODUCTOS] = {0};
+    char nombre[MAX_NOMBRE];
+    printf("\n=== SOLICITUD DEL CLIENTE ===\n");
+    printf("Ingrese productos (escriba 'fin' para terminar)\n");
+
+    while (1) {
+        printf("Producto: ");
+        leerCadena(nombre, MAX_NOMBRE);
+
+        if (strcmp(nombre, "fin") == 0) {
+            break;
+        }
+
+        int idx = -1;
+        for (int i = 0; i < numProductos; i++) {
+            if (strcmp(nombre, nombresProductos[i]) == 0) {
+                idx = i;
+                break;
             }
         }
-    }
-}
 
-void editarProducto(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                    int usoRecursos[][MAX_RECURSOS], int numProductos, int numRecursos) {
-    if (numProductos <= 0) {
-        printf("No hay productos para editar.\n");
+        if (idx == -1) {
+            printf("Producto no encontrado. Intente nuevamente.\n");
+            continue;
+        }
+
+        printf("Cantidad: ");
+        int q = leerEnteroNoNegativo();
+        pedidoCantidades[idx] += q;
+    }
+
+    int hayPedido = 0;
+    for (int i = 0; i < numProductos; i++) {
+        if (pedidoCantidades[i] > 0) { hayPedido = 1; break; }
+    }
+
+    if (!hayPedido) {
+        printf("Pedido vacio. Nada que evaluar.\n");
         return;
     }
 
-    mostrarProductos(productos, cantidades, tiempos, usoRecursos, numProductos, numRecursos);
-    int id;
-    printf("\nIngrese número de producto a editar: ");
-    if (scanf("%d", &id) != 1) return;
-    id--;
+    float tiempoNecesario = 0.0f;
+    int recursosNecesariosTotales[MAX_RECURSOS] = {0};
 
-    if (id < 0 || id >= numProductos) {
-        printf("ID inválido.\n");
-        return;
-    }
+    for (int i = 0; i < numProductos; i++) {
+        if (pedidoCantidades[i] == 0) continue;
 
-    printf("Nuevo nombre: ");
-    scanf("%s", productos[id]);
+        tiempoNecesario += pedidoCantidades[i] * tiempoFabricacion[i];
 
-    printf("Nueva cantidad: ");
-    scanf("%d", &cantidades[id]);
-
-    printf("Nuevo tiempo por unidad: ");
-    scanf("%f", &tiempos[id]);
-
-    for (int r = 0; r < numRecursos; r++) {
-        printf("Nuevo uso del recurso %d: ", r + 1);
-        scanf("%d", &usoRecursos[id][r]);
-    }
-}
-
-void eliminarProducto(char productos[][MAX_NOMBRE], int cantidades[], float tiempos[],
-                      int usoRecursos[][MAX_RECURSOS], int *numProductos, int numRecursos) {
-    if (*numProductos <= 0) {
-        printf("No hay productos para eliminar.\n");
-        return;
-    }
-
-    mostrarProductos(productos, cantidades, tiempos, usoRecursos, *numProductos, numRecursos);
-    int id;
-    printf("\nIngrese número de producto a eliminar: ");
-    if (scanf("%d", &id) != 1) return;
-    id--;
-
-    if (id < 0 || id >= *numProductos) {
-        printf("ID inválido.\n");
-        return;
-    }
-
-    for (int i = id; i < *numProductos - 1; i++) {
-        strcpy(productos[i], productos[i+1]);
-        cantidades[i] = cantidades[i+1];
-        tiempos[i] = tiempos[i+1];
-        for (int r = 0; r < numRecursos; r++)
-            usoRecursos[i][r] = usoRecursos[i+1][r];
-    }
-    (*numProductos)--;
-}
-
-/* ================= UTILIDADES ================= */
-
-float calcularTiempoTotal(int cantidades[], float tiempos[], int numProductos) {
-    float total = 0.0f;
-    for (int i = 0; i < numProductos; i++)
-        total += cantidades[i] * tiempos[i];
-    return total;
-}
-
-void calcularRecursosTotales(int cantidades[], int usoRecursos[][MAX_RECURSOS],
-                             int numProductos, int numRecursos, int recursosTotales[]) {
-    for (int r = 0; r < numRecursos; r++) {
-        recursosTotales[r] = 0;
-        for (int p = 0; p < numProductos; p++) {
-            recursosTotales[r] += cantidades[p] * usoRecursos[p][r];
+        for (int r = 0; r < numRecursos; r++) {
+            recursosNecesariosTotales[r] += pedidoCantidades[i] * recursosNecesarios[i][r];
         }
     }
-}
 
-/*
- verificarFactibilidad:
- - retorna 1 si es factible (tiempo suficiente Y recursos suficientes)
- - retorna 0 si NO es factible
-*/
-int verificarFactibilidad(float tiempoTotal, float tiempoDisponible,
-                          int recursosTotales[], int recursosDisponibles[],
-                          int numRecursos) {
+    printf("\n--- RESUMEN DEL PEDIDO ---\n");
+    for (int i = 0; i < numProductos; i++) {
+        if (pedidoCantidades[i] > 0) {
+            printf("- %s: %d (%.2f por unidad)\n",
+                   nombresProductos[i], pedidoCantidades[i], tiempoFabricacion[i]);
+        }
+    }
+    printf("Tiempo total requerido: %.2f\n", tiempoNecesario);
 
-    if (tiempoTotal > tiempoDisponible)
-        return 0;
-
+    printf("\nRecursos requeridos:\n");
     for (int r = 0; r < numRecursos; r++) {
-        if (recursosTotales[r] > recursosDisponibles[r])
-            return 0;
+        printf("%s: %d (disponible: %d)\n",
+               nombresRecursos[r], recursosNecesariosTotales[r], cantidadTotalRecursos[r]);
     }
 
-    return 1;
+    printf("\n--- FACTIBILIDAD DEL PEDIDO ---\n");
+    int ok = 1;
+
+    if (tiempoNecesario > tiempoFabrica) {
+        printf("No cumple el tiempo. (Necesario: %.2f  Disponible: %.2f)\n",
+               tiempoNecesario, tiempoFabrica);
+        ok = 0;
+    } else {
+        printf("Tiempo OK.\n");
+    }
+
+    for (int r = 0; r < numRecursos; r++) {
+        if (recursosNecesariosTotales[r] > cantidadTotalRecursos[r]) {
+            printf("Recurso insuficiente: %s (falta %d)\n",
+                   nombresRecursos[r],
+                   recursosNecesariosTotales[r] - cantidadTotalRecursos[r]);
+            ok = 0;
+        }
+    }
+
+    if (ok)
+        printf("El pedido ES FACTIBLE.\n");
+    else
+        printf("El pedido NO es factible.\n");
 }
